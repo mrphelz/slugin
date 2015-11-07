@@ -75,7 +75,8 @@ function Slugin(schema, options) {
     next();
   });
 
-  schema.methods.save = function(cb){
+  schema.methods.save = function(foo, cb){
+    if (!cb) cb = foo;
     var self = this;
     mongoose.Model.prototype.save.call(self, function(e, model, num) {
       if (e && (e.code === 11000  || e.code === 11001) && !!~e.errmsg.indexOf(self[options.slugName])) {
