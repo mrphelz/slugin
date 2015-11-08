@@ -6,7 +6,9 @@ var
   _        = require('lodash'),
   Car      = require('./car'),
   Kitten   = require('./kitten'),
-  Person   = require('./person');
+  Person   = require('./person'),
+  Character = require('./character'),
+  Warrior = require('./warrior');
 
 var
   databaseConnection = process.env.SLUGIN_TEST || 'mongodb://localhost/slugin_test';
@@ -18,7 +20,10 @@ function setup(done) {
     if (e) return done(e);
     Car.remove(function(e) {
       if (e) return done(e);
-      Person.remove(done);
+      Person.remove(function(e) {
+        if (e) return done(e);
+        Character.remove(done);
+      });
     });
   });
 }
@@ -162,6 +167,53 @@ describe('Slugin', function() {
         should.not.exist(e);
         k.slug.should.eql('some-guy');
         done();
+      });
+    });
+  });
+
+});
+
+describe('When saving two character named mittens in serial', function() {
+
+  before(setup);
+
+  it('should save two characters without slugs and a warrior slug in the collection', function(done) {
+    new Character({name : 'Alex'}).save(function(e) {
+      if (e) return done(e);
+      new Character({name : 'Michael'}).save(function(e) {
+        if (e) return done(e);
+        new Warrior({name : 'Parson'}).save(done);
+      });
+    });
+  });
+
+});
+
+describe('When creating two warriors with the same name', function() {
+
+  before(setup);
+
+  it('should save two warriors in the collection', function(done) {
+    Warrior.create({name : 'Parson'}, function(e) {
+      if (e) return done(e);
+      Warrior.create({name : 'Parson'}, done);
+    });
+  });
+});
+
+describe('When saving two warriors named Parson and Johnson', function() {
+
+  before(setup);
+
+  it('should save two warriors in the collection', function(done) {
+    new Warrior({name : 'Parson'}).save(function(e) {
+      if (e) return done(e);
+      new Warrior({name : 'Parson'}).save(function(e) {
+        if (e) return done(e);
+        new Character({name : 'Michael'}).save(function(e) {
+          if (e) return done(e);
+          new Warrior({name : 'Johnson'}).save(done);
+        });
       });
     });
   });
